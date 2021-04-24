@@ -1,0 +1,15 @@
+version: '3.8'
+services:
+  go:
+    image: golang:alpine
+    container_name: go
+    restart: unless-stopped
+    tty: true
+    volumes:
+      - ./:/src/
+    networks:
+      - go-network
+
+networks:
+  go-network:
+    driver: bridge
