@@ -1,3 +1,4 @@
 .env
 glue.json
 Add sensitive files to gitignore
+v2/bin
