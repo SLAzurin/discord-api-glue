@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/joho/godotenv"
+	"github.com/SLAzurin/discord-api-glue/v2/pkg/discordapi"
 )
 
 func main() {
@@ -12,6 +13,11 @@ func main() {
 
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Fatalln("Error loading .env file")
+	}
+
+	_, err = discordapi.GetAPI()
+	if err != nil {
+		log.Fatalln(err.Error())
 	}
 }
