@@ -1,0 +1,20 @@
+{
+    "atMentions": [
+        {
+            "discord": {
+                "main": "main-discord#1234",
+                "sub": []
+            },
+            "chat": {
+                "main": "main-chat#3456",
+                "sub": []
+            }
+        }
+    ],
+    "atKeywords": [
+        {
+            "discord": "@everyone",
+            "chat": "@all"
+        }
+    ]
+}
