@@ -6,28 +6,22 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/SLAzurin/discord-api-glue/v2/pkg/genericapi"
 	"github.com/bwmarrin/discordgo"
 )
 
 var (
 	instance                 *DiscordAPI
 	listeningDiscordChannels map[string]bool
-	subscribers              map[string]*chan DiscordAPIMessage
-	ListenChannel            *chan DiscordAPIMessage
+	subscribers              map[string]*chan genericapi.APIMessage
+	ListenChannel            *chan genericapi.APIMessage
 )
 
 // DiscordAPI is the struct of the DiscordAPI inside the API Glue app
 type DiscordAPI struct {
 	session       *discordgo.Session
-	ListenChannel *chan DiscordAPIMessage
+	ListenChannel *chan genericapi.APIMessage
 	channelOpen   bool
-}
-
-// DiscordAPIMessage is a struct that is used to communicate between modules internally
-type DiscordAPIMessage struct {
-	Author      string
-	Content     string
-	Destination string
 }
 
 func GetAPI() (*DiscordAPI, error) {
@@ -52,7 +46,7 @@ func GetAPI() (*DiscordAPI, error) {
 			return nil, err
 		}
 		newAPI.session = discord
-		tChan := make(chan DiscordAPIMessage)
+		tChan := make(chan genericapi.APIMessage)
 		ListenChannel = &tChan
 		newAPI.ListenChannel = ListenChannel
 		newAPI.channelOpen = true
@@ -68,6 +62,7 @@ func listenToGoChannel() {
 		if instance.channelOpen {
 			for elem := range *instance.ListenChannel {
 				// This is a testing line
+				// This will be replaced with sending the actual message to discord
 				fmt.Println("Discord[", elem.Destination, "]:", elem.Content)
 				for _, subbersChan := range subscribers {
 					*subbersChan <- elem
@@ -77,7 +72,7 @@ func listenToGoChannel() {
 	}
 }
 
-func (*DiscordAPI) Subscribe(name string, c *chan DiscordAPIMessage) error {
+func (*DiscordAPI) Subscribe(name string, c *chan genericapi.APIMessage) error {
 	if _, ok := subscribers[name]; ok {
 		return errors.New("Subscriber already exists")
 	}

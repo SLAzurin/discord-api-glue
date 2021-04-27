@@ -6,7 +6,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/SLAzurin/discord-api-glue/v2/pkg/discordapi"
+	"github.com/SLAzurin/discord-api-glue/v2/pkg/genericapi"
+	"github.com/SLAzurin/discord-api-glue/v2/pkg/glueapi"
 	"github.com/joho/godotenv"
 )
 
@@ -19,15 +20,24 @@ func main() {
 	}
 
 	// TODO: Replace discord by GlueAPI
-	discordAPI, err := discordapi.GetAPI()
+	glueAPI, err := glueapi.GetAPI()
 	if err != nil {
-		log.Fatalln("error creating Discord session,", err)
+		log.Fatalln("error creating GlueAPI,", err)
 	}
-
+	
 	// The code below is for testing messaging
 	reader := bufio.NewReader(os.Stdin)
 	for {
 		text, _ := reader.ReadString('\n')
-		*discordAPI.ListenChannel <- discordapi.DiscordAPIMessage{Content: text, Destination: "general", Author: "THIS_BOT"}
+		go glueAPI.SendMessage(
+			glueapi.GlueAPIMessage{
+				DestinationPlatform: glueapi.TYPE_DISCORD,
+				Payload: genericapi.APIMessage{
+					Content:     text,
+					Destination: "general",
+					Author:      "THIS_BOT",
+				},
+			},
+		)
 	}
 }
