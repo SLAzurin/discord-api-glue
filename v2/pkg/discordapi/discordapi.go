@@ -12,7 +12,7 @@ import (
 
 var (
 	instance                 *DiscordAPI
-	listeningDiscordChannels map[string]bool
+	listeningDiscordChannels map[string]*string
 	subscribers              map[string]*chan genericapi.APIMessage
 	ListenChannel            *chan genericapi.APIMessage
 )
@@ -29,15 +29,15 @@ func GetAPI() (*DiscordAPI, error) {
 		// Setup new DiscordAPI
 		newAPI := &DiscordAPI{}
 
-		// Get list of Discord channels to listen
-		listeningDiscordChannels = make(map[string]bool)
+		// Get list of Discord channels to listen (from .env)
+		listeningDiscordChannels = make(map[string]*string)
 		jsonArr := []string{}
 		err := json.Unmarshal([]byte(os.Getenv("DISCORD_CHANNELS")), &jsonArr)
 		if err != nil {
 			return nil, errors.New("DISCORD_CHANNELS not JSON!")
 		}
 		for _, dChan := range jsonArr {
-			listeningDiscordChannels[dChan] = true
+			listeningDiscordChannels[dChan] = nil
 		}
 
 		// Finally create the new instance
@@ -50,6 +50,37 @@ func GetAPI() (*DiscordAPI, error) {
 		ListenChannel = &tChan
 		newAPI.ListenChannel = ListenChannel
 		newAPI.channelOpen = true
+
+		// Register handlers
+		newAPI.session.AddHandler(messageCreateHandler)
+
+		//Register intents
+		newAPI.session.Identify.Intents = discordgo.IntentsGuildMessages
+
+		// Connect to discord
+		err = newAPI.session.Open()
+		if err != nil {
+			return nil, err
+		}
+
+		// Get Discord channel ID
+		if len(newAPI.session.State.Guilds) != 1 {
+			return nil, errors.New("You can only use this bot in 1 discord server")
+		}
+		channels, _ := newAPI.session.GuildChannels(newAPI.session.State.Guilds[0].ID)
+		for _, ch := range channels {
+			if ch.Type != discordgo.ChannelTypeGuildText {
+				continue
+			}
+			if _, ok := listeningDiscordChannels[ch.Name]; ok {
+				listeningDiscordChannels[ch.Name] = &ch.ID
+				fmt.Println("Listening Channel:", ch.Name)
+			} else {
+				fmt.Println("Ignoring Channel:", ch.Name)
+			}
+		}
+		// register handlers
+
 		instance = newAPI
 		go listenToGoChannel()
 	}
