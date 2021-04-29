@@ -1,9 +1,7 @@
 package discordapi
 
 import (
-	"encoding/json"
 	"errors"
-	"fmt"
 	"os"
 
 	"github.com/SLAzurin/discord-api-glue/v2/pkg/genericapi"
@@ -11,10 +9,10 @@ import (
 )
 
 var (
-	instance                 *DiscordAPI
-	listeningDiscordChannels map[string]*string
-	subscribers              map[string]*chan genericapi.APIMessage
-	ListenChannel            *chan genericapi.APIMessage
+	instance                  *DiscordAPI
+	listeningDiscordChannelID *string
+	subscribers               map[string]*chan genericapi.APIMessage
+	ListenChannel             *chan genericapi.APIMessage
 )
 
 // DiscordAPI is the struct of the DiscordAPI inside the API Glue app
@@ -29,18 +27,11 @@ func GetAPI() (*DiscordAPI, error) {
 		// Setup new DiscordAPI
 		newAPI := &DiscordAPI{}
 
-		// Get list of Discord channels to listen (from .env)
-		listeningDiscordChannels = make(map[string]*string)
-		jsonArr := []string{}
-		err := json.Unmarshal([]byte(os.Getenv("DISCORD_CHANNELS")), &jsonArr)
-		if err != nil {
-			return nil, errors.New("DISCORD_CHANNELS not JSON!")
-		}
-		for _, dChan := range jsonArr {
-			listeningDiscordChannels[dChan] = nil
-		}
+		// Get Discord channel to listen (from .env)
+		dChan := os.Getenv("DISCORD_CHANNEL")
+		listeningDiscordChannelID = nil
 
-		// Finally create the new instance
+		// Create the new discord instance
 		discord, err := discordgo.New("Bot " + os.Getenv("DISCORD_AUTH_TOKEN"))
 		if err != nil {
 			return nil, err
@@ -72,14 +63,11 @@ func GetAPI() (*DiscordAPI, error) {
 			if ch.Type != discordgo.ChannelTypeGuildText {
 				continue
 			}
-			if _, ok := listeningDiscordChannels[ch.Name]; ok {
-				listeningDiscordChannels[ch.Name] = &ch.ID
-				fmt.Println("Listening Channel:", ch.Name)
-			} else {
-				fmt.Println("Ignoring Channel:", ch.Name)
-			}
+			listeningDiscordChannelID = &ch.ID
 		}
-		// register handlers
+		if listeningDiscordChannelID == nil {
+			return nil, errors.New("Cannot listen to channel:" + dChan)
+		}
 
 		instance = newAPI
 		go listenToGoChannel()
@@ -92,12 +80,11 @@ func listenToGoChannel() {
 	for {
 		if instance.channelOpen {
 			for elem := range *instance.ListenChannel {
-				// This is a testing line
-				// This will be replaced with sending the actual message to discord
-				fmt.Println("Discord[", elem.Destination, "]:", elem.Content)
-				for _, subbersChan := range subscribers {
-					*subbersChan <- elem
+				// Incoming messages to send to discord
+				if len(elem.Author) != 0 {
+					elem.Author += ": "
 				}
+				instance.session.ChannelMessageSend(*listeningDiscordChannelID, elem.Author+elem.Content)
 			}
 		}
 	}

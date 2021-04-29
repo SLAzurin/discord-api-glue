@@ -34,8 +34,7 @@ func main() {
 				DestinationPlatform: glueapi.TYPE_DISCORD,
 				Payload: genericapi.APIMessage{
 					Content:     text,
-					Destination: "general",
-					Author:      "THIS_BOT",
+					Author:      "",
 				},
 			},
 		)
