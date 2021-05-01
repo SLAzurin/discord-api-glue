@@ -1,6 +1,8 @@
 package glueapi
 
 import (
+	"fmt"
+
 	"github.com/SLAzurin/discord-api-glue/v2/pkg/discordapi"
 	"github.com/SLAzurin/discord-api-glue/v2/pkg/genericapi"
 )
@@ -9,7 +11,7 @@ var (
 	discordAPI *discordapi.DiscordAPI
 	// Add chat api here too
 	incomingDiscordMessages *chan genericapi.APIMessage
-	instance *GlueAPI
+	instance                *GlueAPI
 )
 
 // GlueAPI
@@ -39,6 +41,21 @@ func GetAPI() (*GlueAPI, error) {
 		incomingDiscordMessages = &t
 		discordAPI.Subscribe("GlueAPI", incomingDiscordMessages)
 		instance = &api
+
+		go listenToIncomingDiscordMessages()
 	}
 	return instance, nil
+}
+
+func listenToIncomingDiscordMessages() {
+	for {
+		for elem := range *incomingDiscordMessages {
+			// Incoming messages to send to GChat
+			if len(elem.Author) != 0 {
+				elem.Author += ": "
+			}
+			// Send to GChat
+			fmt.Println(elem.Author + elem.Content)
+		}
+	}
 }

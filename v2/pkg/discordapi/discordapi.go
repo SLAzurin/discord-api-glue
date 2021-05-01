@@ -37,7 +37,7 @@ func GetAPI() (*DiscordAPI, error) {
 		if err != nil {
 			return nil, err
 		}
-		// discordgo.NewState()
+		subscribers = make(map[string]*chan genericapi.APIMessage)
 		
 		newAPI.session = discord
 		tChan := make(chan genericapi.APIMessage)
