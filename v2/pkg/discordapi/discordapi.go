@@ -38,7 +38,7 @@ func GetAPI() (*DiscordAPI, error) {
 			return nil, err
 		}
 		subscribers = make(map[string]*chan genericapi.APIMessage)
-		
+
 		newAPI.session = discord
 		tChan := make(chan genericapi.APIMessage)
 		listenChannel = &tChan
@@ -74,13 +74,13 @@ func GetAPI() (*DiscordAPI, error) {
 		}
 
 		instance = newAPI
-		go listenToGoChannel()
+		go listenToGlueAPIMessages()
 	}
 	return instance, nil
 }
 
-// 
-func listenToGoChannel() {
+// Forever runs and waits for GlueAPI to send us messages so we can send those to Discord
+func listenToGlueAPIMessages() {
 	for {
 		if instance.channelOpen {
 			for elem := range *instance.ListenChannel {
