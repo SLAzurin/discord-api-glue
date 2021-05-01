@@ -8,6 +8,7 @@ import (
 var (
 	discordAPI *discordapi.DiscordAPI
 	// Add chat api here too
+	incomingDiscordMessages *chan genericapi.APIMessage
 	instance *GlueAPI
 )
 
@@ -34,6 +35,9 @@ func GetAPI() (*GlueAPI, error) {
 			return nil, err
 		}
 		discordAPI = dapi
+		t := make(chan genericapi.APIMessage)
+		incomingDiscordMessages = &t
+		discordAPI.Subscribe("GlueAPI", incomingDiscordMessages)
 		instance = &api
 	}
 	return instance, nil

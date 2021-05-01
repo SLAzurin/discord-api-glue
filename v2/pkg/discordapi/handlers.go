@@ -1,7 +1,6 @@
 package discordapi
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/SLAzurin/discord-api-glue/v2/pkg/genericapi"
@@ -26,5 +25,6 @@ func messageCreateHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 	} else {
 		incomingAPIMessage.Author = m.Author.Username
 	}
-	fmt.Println(incomingAPIMessage.Author + ": " + incomingAPIMessage.Content)
+	// fmt.Println(incomingAPIMessage.Author + ": " + incomingAPIMessage.Content)
+	go publishMessage(&incomingAPIMessage)
 }

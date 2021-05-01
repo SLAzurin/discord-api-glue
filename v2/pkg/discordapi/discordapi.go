@@ -79,7 +79,7 @@ func GetAPI() (*DiscordAPI, error) {
 	return instance, nil
 }
 
-// This publishes the incoming messages to the subscribers
+// 
 func listenToGoChannel() {
 	for {
 		if instance.channelOpen {
@@ -92,12 +92,4 @@ func listenToGoChannel() {
 			}
 		}
 	}
-}
-
-func (*DiscordAPI) Subscribe(name string, c *chan genericapi.APIMessage) error {
-	if _, ok := subscribers[name]; ok {
-		return errors.New("Subscriber already exists")
-	}
-	subscribers[name] = c
-	return nil
 }
