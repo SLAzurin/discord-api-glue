@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	discordAPI discordapi.DiscordAPI
+	discordAPI *discordapi.DiscordAPI
 	// Add chat api here too
 	instance *GlueAPI
 )
@@ -33,7 +33,7 @@ func GetAPI() (*GlueAPI, error) {
 		if err != nil {
 			return nil, err
 		}
-		discordAPI = *dapi
+		discordAPI = dapi
 		instance = &api
 	}
 	return instance, nil

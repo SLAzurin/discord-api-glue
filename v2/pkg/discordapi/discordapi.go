@@ -11,8 +11,9 @@ import (
 var (
 	instance                  *DiscordAPI
 	listeningDiscordChannelID *string
+	guildID                   *string
 	subscribers               map[string]*chan genericapi.APIMessage
-	ListenChannel             *chan genericapi.APIMessage
+	listenChannel             *chan genericapi.APIMessage
 )
 
 // DiscordAPI is the struct of the DiscordAPI inside the API Glue app
@@ -36,17 +37,19 @@ func GetAPI() (*DiscordAPI, error) {
 		if err != nil {
 			return nil, err
 		}
+		// discordgo.NewState()
+		
 		newAPI.session = discord
 		tChan := make(chan genericapi.APIMessage)
-		ListenChannel = &tChan
-		newAPI.ListenChannel = ListenChannel
+		listenChannel = &tChan
+		newAPI.ListenChannel = listenChannel
 		newAPI.channelOpen = true
 
 		// Register handlers
 		newAPI.session.AddHandler(messageCreateHandler)
 
 		//Register intents
-		newAPI.session.Identify.Intents = discordgo.IntentsGuildMessages
+		newAPI.session.Identify.Intents = discordgo.IntentsGuildMessages | discordgo.IntentsGuilds
 
 		// Connect to discord
 		err = newAPI.session.Open()
@@ -58,7 +61,8 @@ func GetAPI() (*DiscordAPI, error) {
 		if len(newAPI.session.State.Guilds) != 1 {
 			return nil, errors.New("You can only use this bot in 1 discord server")
 		}
-		channels, _ := newAPI.session.GuildChannels(newAPI.session.State.Guilds[0].ID)
+		guildID = &newAPI.session.State.Guilds[0].ID
+		channels, _ := newAPI.session.GuildChannels(*guildID)
 		for _, ch := range channels {
 			if ch.Type != discordgo.ChannelTypeGuildText {
 				continue
